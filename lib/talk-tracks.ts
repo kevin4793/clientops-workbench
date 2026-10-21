@@ -1,4 +1,8 @@
-export type TalkScenario = "到期提醒" | "到账核对" | "犹豫期回访";
+export type TalkScenario =
+  | "关怀"
+  | "到期提醒"
+  | "到账核对"
+  | "犹豫期回访";
 
 export interface TalkTrack {
   id: string;
@@ -12,6 +16,27 @@ const RISK =
   "【合规提示】不得承诺收益或保本；话术仅供参考，需结合客户风险承受能力及产品说明书。";
 
 export const TALK_TRACKS: TalkTrack[] = [
+  {
+    id: "care-1",
+    scenario: "关怀",
+    title: "生日祝福（无销售）",
+    body: `{姓名} 先生/女士您好，我是XX银行财富经理。祝您生日快乐，感谢一直以来的信任。如您近期有金融服务需求，欢迎预约到行咨询；本次问候不涉及任何产品推介或收益承诺。`,
+    complianceNote: RISK,
+  },
+  {
+    id: "care-2",
+    scenario: "关怀",
+    title: "节日问候",
+    body: `{姓名} 您好，{节日}将至，谨致问候。近期天气多变，请注意出行与财产安全。如需账户或到期事项咨询，可回复本消息预约联系时间。`,
+    complianceNote: RISK,
+  },
+  {
+    id: "care-3",
+    scenario: "关怀",
+    title: "久未联系回访",
+    body: `{姓名} 您好，例行服务回访：了解您近期资金安排是否顺畅。如有到期或到账疑问，我可协助查询与登记；不向客户推荐具体产品。`,
+    complianceNote: RISK,
+  },
   {
     id: "expiry-1",
     scenario: "到期提醒",

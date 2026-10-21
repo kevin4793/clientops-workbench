@@ -10,10 +10,9 @@ const noto = Noto_Sans_SC({
 });
 
 export const metadata: Metadata = {
-  title: "客户到期工作台 · 银行理财经理版",
+  title: "客户维护工作台 · Client Maintenance Ops",
   description:
-    "到期与续期运营看板：公开演练与授权快照分离，含到账核对、合规话术与晨会简报。",
-  themeColor: "#173f36",
+    "银行理财经理客户维护运营平台：档案、关怀、持仓、任务、服务记录与到期模块；公开演练与授权快照分离。",
 };
 
 export default function RootLayout({

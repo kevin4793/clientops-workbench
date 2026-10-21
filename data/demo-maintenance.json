@@ -1,0 +1,292 @@
+{
+  "demo-001": {
+    "profile": {
+      "familyStructure": "已婚，配偶同屏服务；一子（学龄），父母同城",
+      "riskPreferenceTags": ["稳健偏进取", "R3", "高净值服务"],
+      "recentContactSummary": "10/18 短信提醒到期，客户倾向到期后先转活期再决定",
+      "birthday": "1988-03-12",
+      "memberSince": "2019-06"
+    },
+    "holdings": [
+      {
+        "id": "h1",
+        "productType": "理财",
+        "productName": "演练稳健理财·180天",
+        "contractNo": "DEMO-LC-2026-001",
+        "principalAmount": 1200000,
+        "expiryDate": "2026-10-21",
+        "status": "即将到期"
+      },
+      {
+        "id": "h2",
+        "productType": "基金",
+        "productName": "演练债基组合·演示",
+        "contractNo": "DEMO-FUND-2201",
+        "principalAmount": 300000,
+        "status": "持有中"
+      }
+    ],
+    "careReminders": [
+      { "id": "cr1", "type": "节日", "date": "2026-10-25", "label": "重阳节关怀（演练）", "done": false }
+    ],
+    "maintenanceTasks": [
+      {
+        "id": "mt1",
+        "title": "今日到期电话确认资金安排",
+        "dueDate": "2026-10-21",
+        "status": "待联系",
+        "category": "到期"
+      },
+      {
+        "id": "mt2",
+        "title": "预约面签双录（如客户续作）",
+        "dueDate": "2026-10-23",
+        "status": "待联系",
+        "category": "到期"
+      }
+    ],
+    "serviceRecords": [
+      {
+        "id": "sr1",
+        "at": "2026-10-18T10:30:00+08:00",
+        "channel": "短信",
+        "summary": "发送到期前 T-3 提醒（演练模板）"
+      },
+      {
+        "id": "sr2",
+        "at": "2026-10-15T15:00:00+08:00",
+        "channel": "微信",
+        "summary": "客户回复「收到，这周忙」— 已备注待电话"
+      }
+    ]
+  },
+  "demo-002": {
+    "profile": {
+      "familyStructure": "单身，自主决策；父母异地",
+      "riskPreferenceTags": ["保守型", "R2"],
+      "recentContactSummary": "10/20 已电话，关注满期金流程说明",
+      "birthday": "1992-11-08",
+      "memberSince": "2021-03"
+    },
+    "holdings": [
+      {
+        "id": "h1",
+        "productType": "保险",
+        "productName": "演练年金险·演示保单",
+        "contractNo": "DEMO-INS-0092",
+        "principalAmount": 800000,
+        "expiryDate": "2026-10-24",
+        "status": "即将到期"
+      },
+      {
+        "id": "h2",
+        "productType": "存款",
+        "productName": "演练活期+通知存款",
+        "contractNo": "DEMO-CD-9920",
+        "principalAmount": 150000,
+        "status": "持有中"
+      }
+    ],
+    "careReminders": [
+      { "id": "cr1", "type": "生日", "date": "2026-11-08", "label": "客户生日（约 18 天后）", "done": false }
+    ],
+    "maintenanceTasks": [
+      {
+        "id": "mt1",
+        "title": "发送满期给付说明邮件/微信",
+        "dueDate": "2026-10-22",
+        "status": "已约访",
+        "category": "到期"
+      }
+    ],
+    "serviceRecords": [
+      {
+        "id": "sr1",
+        "at": "2026-10-20T11:00:00+08:00",
+        "channel": "电话",
+        "summary": "沟通满期流程，客户无新增产品意向"
+      }
+    ]
+  },
+  "demo-003": {
+    "profile": {
+      "familyStructure": "已婚二孩；家庭资产集中管理",
+      "riskPreferenceTags": ["平衡型", "R3", "高净值"],
+      "recentContactSummary": "10/20 反馈到账金额与短信不一致，情绪焦虑",
+      "birthday": "1985-07-22",
+      "memberSince": "2016-01"
+    },
+    "holdings": [
+      {
+        "id": "h1",
+        "productType": "理财",
+        "productName": "演练理财·期限款",
+        "contractNo": "DEMO-003",
+        "principalAmount": 3500000,
+        "expiryDate": "2026-10-19",
+        "status": "已到期"
+      },
+      {
+        "id": "h2",
+        "productType": "信托",
+        "productName": "演练家族信托·演示",
+        "contractNo": "DEMO-XT-9901",
+        "principalAmount": 8000000,
+        "status": "持有中"
+      }
+    ],
+    "careReminders": [],
+    "maintenanceTasks": [
+      {
+        "id": "mt1",
+        "title": "优先回访：到账差异说明",
+        "dueDate": "2026-10-21",
+        "status": "待联系",
+        "category": "到期"
+      },
+      {
+        "id": "mt2",
+        "title": "协同运营工单闭环",
+        "dueDate": "2026-10-22",
+        "status": "待联系",
+        "category": "其他"
+      }
+    ],
+    "serviceRecords": [
+      {
+        "id": "sr1",
+        "at": "2026-10-20T09:15:00+08:00",
+        "channel": "电话",
+        "summary": "记录客户到账疑问，承诺当日核对回电"
+      },
+      {
+        "id": "sr1b",
+        "at": "2026-10-19T16:40:00+08:00",
+        "channel": "面会",
+        "summary": "到期前网点面谈（演练）— 仅流程说明"
+      }
+    ]
+  },
+  "demo-004": {
+    "profile": {
+      "familyStructure": "企业主；配偶参与重大决策",
+      "riskPreferenceTags": ["进取型", "R4", "高净值"],
+      "recentContactSummary": "尚未联系，待发送信托清算 FAQ",
+      "birthday": "1979-12-30",
+      "memberSince": "2015-08"
+    },
+    "holdings": [
+      {
+        "id": "h1",
+        "productType": "信托",
+        "productName": "演练信托计划·12个月",
+        "contractNo": "DEMO-XT-7710",
+        "principalAmount": 6000000,
+        "expiryDate": "2026-10-28",
+        "status": "即将到期"
+      },
+      {
+        "id": "h2",
+        "productType": "理财",
+        "productName": "演练现金管理类·演示",
+        "contractNo": "DEMO-LC-8800",
+        "principalAmount": 2000000,
+        "status": "持有中"
+      }
+    ],
+    "careReminders": [
+      { "id": "cr1", "type": "节日", "date": "2026-12-30", "label": "元旦前问候（计划）", "done": false }
+    ],
+    "maintenanceTasks": [
+      {
+        "id": "mt1",
+        "title": "高净值专线首次触达",
+        "dueDate": "2026-10-24",
+        "status": "待联系",
+        "category": "到期"
+      }
+    ],
+    "serviceRecords": []
+  },
+  "demo-005": {
+    "profile": {
+      "familyStructure": "退休夫妇，决策稳健",
+      "riskPreferenceTags": ["保守型", "R1"],
+      "recentContactSummary": "10/21 已办结转存，无需外呼",
+      "birthday": "1960-05-06",
+      "memberSince": "2012-11"
+    },
+    "holdings": [
+      {
+        "id": "h1",
+        "productType": "存款",
+        "productName": "演练大额存单·3年期",
+        "contractNo": "DEMO-CD-5521",
+        "principalAmount": 500000,
+        "expiryDate": "2026-10-21",
+        "status": "已到期"
+      }
+    ],
+    "careReminders": [
+      { "id": "cr1", "type": "生日", "date": "2026-05-06", "label": "客户生日（次年）", "done": true }
+    ],
+    "maintenanceTasks": [
+      {
+        "id": "mt1",
+        "title": "归档服务记录",
+        "dueDate": "2026-10-21",
+        "status": "已办结",
+        "category": "其他"
+      }
+    ],
+    "serviceRecords": [
+      {
+        "id": "sr1",
+        "at": "2026-10-21T10:00:00+08:00",
+        "channel": "电话",
+        "summary": "确认自动转存规则，客户无异议"
+      }
+    ]
+  },
+  "demo-006": {
+    "profile": {
+      "familyStructure": "新婚，单账户起步",
+      "riskPreferenceTags": ["成长型", "R3"],
+      "recentContactSummary": "开放期前需提醒规则，未联系",
+      "birthday": "1995-02-14",
+      "memberSince": "2024-09"
+    },
+    "holdings": [
+      {
+        "id": "h1",
+        "productType": "基金",
+        "productName": "演练固收+·开放期",
+        "contractNo": "DEMO-FUND-1188",
+        "principalAmount": 280000,
+        "expiryDate": "2026-11-05",
+        "status": "即将到期"
+      }
+    ],
+    "careReminders": [
+      { "id": "cr1", "type": "纪念日", "date": "2026-02-14", "label": "客户生日（演示跨年）", "done": true },
+      { "id": "cr2", "type": "节日", "date": "2026-10-29", "label": "万圣节问候（可选，演练）", "done": false }
+    ],
+    "maintenanceTasks": [
+      {
+        "id": "mt1",
+        "title": "开放期规则提醒",
+        "dueDate": "2026-11-01",
+        "status": "待联系",
+        "category": "回访"
+      }
+    ],
+    "serviceRecords": [
+      {
+        "id": "sr1",
+        "at": "2026-09-28T14:20:00+08:00",
+        "channel": "微信",
+        "summary": "开户欢迎语与风险测评提醒（演练）"
+      }
+    ]
+  }
+}

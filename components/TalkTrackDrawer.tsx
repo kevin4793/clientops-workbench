@@ -8,7 +8,12 @@ import {
 } from "@/lib/talk-tracks";
 import type { ClientRecord } from "@/lib/types";
 
-const scenarios: TalkScenario[] = ["到期提醒", "到账核对", "犹豫期回访"];
+const scenarios: TalkScenario[] = [
+  "关怀",
+  "到期提醒",
+  "到账核对",
+  "犹豫期回访",
+];
 
 export function TalkTrackDrawer({
   client,
@@ -35,6 +40,7 @@ export function TalkTrackDrawer({
     合同号: client.contractNo,
     到期日: client.expiryDate,
     回执号: client.reconciliation.receiptRef ?? "（无）",
+    节日: "重阳节",
   };
 
   async function copyText(id: string, body: string, note: string) {

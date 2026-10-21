@@ -15,9 +15,31 @@ import type {
   ClientRecord,
   DataMode,
   FollowUpStatus,
+  MaintenanceTaskStatus,
 } from "@/lib/types";
 
-const STORAGE_KEY = "clientops-state-v1";
+const STORAGE_KEY = "clientops-state-v2";
+
+function mergeSavedClients(
+  saved: ClientRecord[] | undefined,
+  fresh: ClientRecord[]
+): ClientRecord[] {
+  if (!saved?.length) return fresh;
+  return fresh.map((f) => {
+    const s = saved.find((x) => x.id === f.id);
+    if (!s) return f;
+    return {
+      ...f,
+      followUpStatus: s.followUpStatus,
+      gaps: s.gaps,
+      complianceChecks: s.complianceChecks,
+      maintenanceTasks: s.maintenanceTasks,
+      careReminders: s.careReminders,
+      lastContactAt: s.lastContactAt,
+      lastContactNote: s.lastContactNote,
+    };
+  });
+}
 
 interface PersistedState {
   dataMode: DataMode;
@@ -36,6 +58,16 @@ interface ClientOpsContextValue {
     checked: boolean
   ) => void;
   updateGap: (id: string, gapId: string, resolved: boolean) => void;
+  updateMaintenanceTask: (
+    clientId: string,
+    taskId: string,
+    status: MaintenanceTaskStatus
+  ) => void;
+  updateCareReminder: (
+    clientId: string,
+    reminderId: string,
+    done: boolean
+  ) => void;
   getClient: (id: string) => ClientRecord | undefined;
   auditLog: AuditEntry[];
   addAudit: (action: string, clientId?: string, detail?: string) => void;
@@ -56,7 +88,7 @@ function defaultState(): PersistedState {
         id: "audit-init",
         at: new Date("2026-10-21T09:00:00+08:00").toISOString(),
         actor: DEMO_ACTOR,
-        action: "打开工作台（演示数据）",
+        action: "打开客户维护工作台（演示数据）",
         detail: "系统初始化审计记录",
       },
     ],
@@ -73,9 +105,14 @@ function loadState(): PersistedState {
       ...defaultState(),
       ...parsed,
       clientsByMode: {
-        demo: parsed.clientsByMode?.demo ?? loadClientsForMode("demo"),
-        snapshot:
-          parsed.clientsByMode?.snapshot ?? loadClientsForMode("snapshot"),
+        demo: mergeSavedClients(
+          parsed.clientsByMode?.demo,
+          loadClientsForMode("demo")
+        ),
+        snapshot: mergeSavedClients(
+          parsed.clientsByMode?.snapshot,
+          loadClientsForMode("snapshot")
+        ),
       },
     };
   } catch {
@@ -159,6 +196,50 @@ export function ClientOpsProvider({ children }: { children: ReactNode }) {
     [addAudit]
   );
 
+  const updateMaintenanceTask = useCallback(
+    (clientId: string, taskId: string, status: MaintenanceTaskStatus) => {
+      setState((s) => {
+        const list = s.clientsByMode[s.dataMode].map((c) => {
+          if (c.id !== clientId) return c;
+          return {
+            ...c,
+            maintenanceTasks: c.maintenanceTasks.map((t) =>
+              t.id === taskId ? { ...t, status } : t
+            ),
+          };
+        });
+        return {
+          ...s,
+          clientsByMode: { ...s.clientsByMode, [s.dataMode]: list },
+        };
+      });
+      addAudit("更新维护任务", clientId, status);
+    },
+    [addAudit]
+  );
+
+  const updateCareReminder = useCallback(
+    (clientId: string, reminderId: string, done: boolean) => {
+      setState((s) => {
+        const list = s.clientsByMode[s.dataMode].map((c) => {
+          if (c.id !== clientId) return c;
+          return {
+            ...c,
+            careReminders: c.careReminders.map((r) =>
+              r.id === reminderId ? { ...r, done } : r
+            ),
+          };
+        });
+        return {
+          ...s,
+          clientsByMode: { ...s.clientsByMode, [s.dataMode]: list },
+        };
+      });
+      addAudit("更新关怀清单", clientId, done ? "已关怀" : "待办");
+    },
+    [addAudit]
+  );
+
   const updateGap = useCallback(
     (id: string, gapId: string, resolved: boolean) => {
       setState((s) => {
@@ -212,6 +293,8 @@ export function ClientOpsProvider({ children }: { children: ReactNode }) {
       updateFollowUp,
       updateComplianceCheck,
       updateGap,
+      updateMaintenanceTask,
+      updateCareReminder,
       getClient,
       auditLog: state.auditLog,
       addAudit,
@@ -225,6 +308,8 @@ export function ClientOpsProvider({ children }: { children: ReactNode }) {
       updateFollowUp,
       updateComplianceCheck,
       updateGap,
+      updateMaintenanceTask,
+      updateCareReminder,
       getClient,
       addAudit,
       generateTodayTodos,

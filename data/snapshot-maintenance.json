@@ -1,0 +1,71 @@
+{
+  "snap-001": {
+    "profile": {
+      "familyStructure": "授权快照测试客户 A",
+      "riskPreferenceTags": ["测试", "R2"],
+      "recentContactSummary": "仅授权环境可见的摘要",
+      "birthday": "1990-01-15",
+      "memberSince": "2025-01"
+    },
+    "holdings": [
+      {
+        "id": "h1",
+        "productType": "理财",
+        "productName": "授权环境·净值型理财（测试）",
+        "contractNo": "AUTH-SNAP-001",
+        "principalAmount": 2000000,
+        "expiryDate": "2026-10-22",
+        "status": "即将到期"
+      }
+    ],
+    "careReminders": [],
+    "maintenanceTasks": [
+      {
+        "id": "mt1",
+        "title": "验证快照模式任务流",
+        "status": "待联系",
+        "category": "其他"
+      }
+    ],
+    "serviceRecords": []
+  },
+  "snap-002": {
+    "profile": {
+      "familyStructure": "授权快照测试客户 B",
+      "riskPreferenceTags": ["测试", "高净值"],
+      "recentContactSummary": "满期测试 + 到账差异演练",
+      "birthday": "1982-08-20",
+      "memberSince": "2024-06"
+    },
+    "holdings": [
+      {
+        "id": "h1",
+        "productType": "保险",
+        "productName": "授权环境·保单满期（测试）",
+        "contractNo": "AUTH-SNAP-002",
+        "principalAmount": 1500000,
+        "expiryDate": "2026-10-19",
+        "status": "已到期"
+      }
+    ],
+    "careReminders": [
+      { "id": "cr1", "type": "生日", "date": "2026-08-20", "label": "生日已过（演练）", "done": true }
+    ],
+    "maintenanceTasks": [
+      {
+        "id": "mt1",
+        "title": "快照环境到账核对",
+        "status": "已约访",
+        "category": "到期"
+      }
+    ],
+    "serviceRecords": [
+      {
+        "id": "sr1",
+        "at": "2026-10-19T09:00:00+08:00",
+        "channel": "电话",
+        "summary": "授权快照测试通话记录"
+      }
+    ]
+  }
+}

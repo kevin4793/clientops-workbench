@@ -1,69 +1,85 @@
-# 客户到期工作台（ClientOps）
+# 客户维护工作台 · Client Maintenance Ops
 
-面向银行理财经理的**客户到期 / 续期运营**演练工作台。从 Manus 原型迁移为可维护的 Next.js 应用：到期看板、到账核对、优先级排序、续期作战室、合规话术、晨会简报与本地审计轨迹。
+面向**银行理财经理**的客户全生命周期维护运营平台（Next.js App Router + TypeScript + Tailwind）。  
+到期与续期只是其中一个模块；同一工作台还覆盖档案、关怀、持仓、任务、服务记录、合规话术与晨会简报。
 
-> **合规说明**：全部为虚构演示客户，不提供投资建议；话术模板均含风险提示。
+> **合规**：全部为虚构演示客户，不提供投资建议；话术含风险提示模板。  
+> **原型说明**：早期 Manus 预览（`clientops-hybuephs.manus.space`）仅作交互参考，**已退役**；本仓库为 Cursor Origin 上的长期可维护代码基线。
 
 ## 快速开始
 
 ```bash
 npm install
-npm run dev
-```
-
-浏览器打开 [http://localhost:3000](http://localhost:3000)（默认端口 3000）。
-
-生产构建：
-
-```bash
+npm run dev    # http://localhost:43123
 npm run build
 npm start
 ```
 
-可部署至 [Vercel](https://vercel.com) 等支持 Next.js 的平台。
+## 模块导航
 
-## 演示数据与数据模式
+| 路由 | 模块 |
+|------|------|
+| `/` | 总览仪表盘（跨模块摘要） |
+| `/profiles` | 客户档案摘要 |
+| `/care` | 生日与节日关怀 |
+| `/holdings` | 多产品持仓 / 到期总览 |
+| `/tasks` | 跟进任务板（待联系 / 已约访 / 已办结） |
+| `/timeline` | 服务记录时间线 |
+| `/talks` | 合规话术库 |
+| `/expiry` | **到期运营**（看板、核对、作战室入口） |
+| `/war-room/[id]` | 续期作战室 |
+| `/brief` | 晨会简报 |
 
-| 模式 | 说明 | 数据文件 |
-|------|------|----------|
-| **公开演练**（默认） | 对外可展示的虚构客户 | `data/demo-clients.json` |
-| **授权快照** | 与演练库隔离的测试快照 | `data/snapshot-clients.json` |
+右上角 **公开演练** / **授权快照** 数据隔离；状态变更写入本地审计（`理财经理·演示`）。
 
-- 界面右上角可切换模式；切换会写入**审计轨迹**。
-- 业务基准日固定为 **2026-10-21**（见 `lib/dates.ts` 的 `REFERENCE_DATE`），便于「今日 / 7 日内 / 逾期」筛选与演示一致。
-- 跟进状态、缺口勾选、合规勾选等变更保存在浏览器 `localStorage`（键名 `clientops-state-v1`），刷新后仍保留。
+## 演示数据
 
-### 更换数据源
+- 基础到期字段：`data/demo-clients.json`、`data/snapshot-clients.json`
+- 维护扩展字段：`data/demo-maintenance.json`、`data/snapshot-maintenance.json`（按客户 id 合并）
+- 业务基准日：`lib/dates.ts` → `REFERENCE_DATE`（2026-10-21）
+- 浏览器持久化：`localStorage` 键 `clientops-state-v2`
 
-1. **编辑 JSON**：直接修改 `data/demo-clients.json` 或 `data/snapshot-clients.json`，结构见 `lib/types.ts` 中的 `ClientRecord`。
-2. **HTTP API**：`GET /api/clients?mode=demo|snapshot` 返回当前 JSON 内容；前端目前以 Context + JSON 为主，可逐步改为 fetch 该接口。
-3. **Notion / SQLite（预留）**：见 `app/api/clients/route.ts` 内注释，将查询结果映射为 `ClientRecord[]` 即可。
+替换数据源：编辑 JSON，或实现 `GET /api/clients`；结构见 `lib/types.ts` 的 `ClientRecord`。
 
-## 功能一览
+## 集成占位（无密钥，可直接编译）
 
-- **到期看板**：今日 / 7 日内 / 已逾期 / 本月；按产品类型、优先级、未办结筛选
-- **客户卡片**：脱敏姓名、产品、到期日、合同号、跟进状态、到账核对（差异高亮）
-- **优先级引擎**：综合距到期天数、金额档、高净值标签、逾期与核对状态，Top1 展示排序原因
-- **续期作战室**（`/war-room/[id]`）：时间线、缺口清单、动作级建议、合规勾选
-- **合规话术抽屉**：到期提醒 / 到账核对 / 犹豫期回访，一键复制（含不得承诺收益提示）
-- **晨会简报**（`/brief`）：该打谁、为什么、说什么 — 支持复制 Markdown 与打印
-- **审计轨迹**：操作人固定为「理财经理·演示」
+### Notion 客户库（Kevin）
 
-## 技术栈
+- `GET/POST /api/integrations/notion` — 返回 stub 与接入注释
+- 目标：将 Notion Database 同步为 `ClientRecord` + maintenance 字段
+- 环境变量（未来）：`NOTION_TOKEN`、`NOTION_DATABASE_ID`（勿提交仓库）
 
-- Next.js App Router · TypeScript · Tailwind CSS v4
-- 无真实 PII、无支付/证券接口
+### Grok Bot Webhook
 
-## 目录结构（简要）
+- `GET/POST /api/integrations/grok-bot` — 接收 Bot 推送的任务载荷
+- 示例 POST body：
+  ```json
+  { "type": "expiry_alert", "clientId": "demo-003", "message": "逾期核对" }
+  ```
+  ```json
+  { "type": "brief_request", "format": "markdown" }
+  ```
+- 可选鉴权：请求头 `Authorization: Bearer <GROK_BOT_WEBHOOK_SECRET>`
+- 演示环境不做真实写库，返回 `accepted` 与前端路由提示；Kevin 的 Grok Bot 可据此对接后再实现服务端处理器。
+
+## 在 Cursor Origin 中长期维护
+
+1. 在本仓库继续迭代 UI、数据模型与集成逻辑（Manus 链接不再作为交付物）。
+2. Grok Bot 通过 HTTPS 调用部署后的 `/api/integrations/grok-bot`（本地开发可用隧道转发）。
+3. Notion 同步建议在 CI 或定时任务中调用 `/api/integrations/notion` 的 POST 实现。
+4. 部署：Vercel / 行内静态托管均可；`npm run build` 为发布前检查。
+
+## 技术结构
 
 ```
-app/              页面与 API 路由
-components/       UI 组件
-context/          客户端状态与 localStorage
-data/             演示 JSON
-lib/              类型、优先级、日期、话术
+app/(main)/          带侧栏的各业务模块页面
+app/api/             clients、audit、integrations/*
+components/          UI 与 ExpiryModule
+context/             ClientOpsProvider
+data/                演示 JSON
+lib/                 类型、优先级、话术、导航
 ```
 
 ## 许可证
 
-内部演示用途；请勿将演示数据当作真实客户信息使用。
+内部演示用途；请勿将演示数据当作真实客户信息。

@@ -9,6 +9,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { ensureClientShape } from "@/lib/enrich-client";
+import {
+  buildClientFromIntake,
+  type IntakeFormValues,
+} from "@/lib/build-client-from-intake";
 import { loadClientsForMode, DEMO_ACTOR } from "@/lib/data-source";
 import type {
   AuditEntry,
@@ -18,7 +23,7 @@ import type {
   MaintenanceTaskStatus,
 } from "@/lib/types";
 
-const STORAGE_KEY = "clientops-state-v2";
+const STORAGE_KEY = "clientops-state-v3";
 
 function mergeSavedClients(
   saved: ClientRecord[] | undefined,
@@ -37,8 +42,25 @@ function mergeSavedClients(
       careReminders: s.careReminders,
       lastContactAt: s.lastContactAt,
       lastContactNote: s.lastContactNote,
+      profile: s.profile ?? f.profile,
     };
   });
+}
+
+function reconcileClientList(
+  saved: ClientRecord[] | undefined,
+  mode: DataMode
+): ClientRecord[] {
+  const fresh = loadClientsForMode(mode);
+  const freshIds = new Set(fresh.map((c) => c.id));
+  const merged = mergeSavedClients(
+    saved?.filter((c) => freshIds.has(c.id)),
+    fresh
+  );
+  const added = (saved ?? [])
+    .filter((c) => !freshIds.has(c.id))
+    .map((c) => ensureClientShape(c as unknown as Record<string, unknown>));
+  return [...merged, ...added];
 }
 
 interface PersistedState {
@@ -72,6 +94,7 @@ interface ClientOpsContextValue {
   auditLog: AuditEntry[];
   addAudit: (action: string, clientId?: string, detail?: string) => void;
   generateTodayTodos: () => ClientRecord[];
+  registerClientFromIntake: (values: IntakeFormValues) => ClientRecord;
 }
 
 const ClientOpsContext = createContext<ClientOpsContextValue | null>(null);
@@ -105,14 +128,8 @@ function loadState(): PersistedState {
       ...defaultState(),
       ...parsed,
       clientsByMode: {
-        demo: mergeSavedClients(
-          parsed.clientsByMode?.demo,
-          loadClientsForMode("demo")
-        ),
-        snapshot: mergeSavedClients(
-          parsed.clientsByMode?.snapshot,
-          loadClientsForMode("snapshot")
-        ),
+        demo: reconcileClientList(parsed.clientsByMode?.demo, "demo"),
+        snapshot: reconcileClientList(parsed.clientsByMode?.snapshot, "snapshot"),
       },
     };
   } catch {
@@ -285,6 +302,22 @@ export function ClientOpsProvider({ children }: { children: ReactNode }) {
     );
   }, [clients]);
 
+  const registerClientFromIntake = useCallback(
+    (values: IntakeFormValues) => {
+      const record = buildClientFromIntake(values, state.dataMode);
+      setState((s) => ({
+        ...s,
+        clientsByMode: {
+          ...s.clientsByMode,
+          [s.dataMode]: [record, ...s.clientsByMode[s.dataMode]],
+        },
+      }));
+      addAudit("高效录入确认登记", record.id, record.displayName);
+      return record;
+    },
+    [addAudit, state.dataMode]
+  );
+
   const value = useMemo(
     () => ({
       dataMode: state.dataMode,
@@ -299,6 +332,7 @@ export function ClientOpsProvider({ children }: { children: ReactNode }) {
       auditLog: state.auditLog,
       addAudit,
       generateTodayTodos,
+      registerClientFromIntake,
     }),
     [
       state.dataMode,
@@ -313,6 +347,7 @@ export function ClientOpsProvider({ children }: { children: ReactNode }) {
       getClient,
       addAudit,
       generateTodayTodos,
+      registerClientFromIntake,
     ]
   );
 

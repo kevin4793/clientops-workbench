@@ -1,3 +1,4 @@
+import { emptyExtendedProfile } from "./profile-extended";
 import type { ClientRecord, HoldingPosition } from "./types";
 
 /** 将单笔到期字段同步为持仓列表的首项（兼容旧 JSON） */
@@ -15,11 +16,20 @@ export function ensureClientShape(raw: Record<string, unknown>): ClientRecord {
 
   return {
     ...c,
-    profile: c.profile ?? {
-      familyStructure: "（演示）家庭信息待补充",
-      riskPreferenceTags: ["稳健型（演示）"],
-      recentContactSummary: c.lastContactNote ?? "暂无最近接触摘要",
-      birthday: "01-01",
+    profile: {
+      familyStructure:
+        c.profile?.familyStructure ?? "（演示）家庭信息待补充",
+      riskPreferenceTags:
+        c.profile?.riskPreferenceTags ?? ["稳健型（演示）"],
+      recentContactSummary:
+        c.profile?.recentContactSummary ??
+        c.lastContactNote ??
+        "暂无最近接触摘要",
+      birthday: c.profile?.birthday ?? "01-01",
+      memberSince: c.profile?.memberSince,
+      extended: c.profile?.extended ?? emptyExtendedProfile(),
+      productCode: c.profile?.productCode ?? c.contractNo ?? "",
+      contactNotes: c.profile?.contactNotes ?? c.lastContactNote ?? "",
     },
     holdings: c.holdings?.length ? c.holdings : [primaryHolding],
     careReminders: c.careReminders ?? [],

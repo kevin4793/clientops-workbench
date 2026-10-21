@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
  * Kevin 的 Grok Bot 可 POST JSON 触发维护动作，例如：
  * - { "type": "expiry_alert", "clientId": "demo-003", "message": "..." }
  * - { "type": "brief_request", "format": "markdown" }
+ * - { "type": "intake_parse", "text": "..." } 或 { "imageText": "..." }
  *
  * 生产环境应校验 Authorization: Bearer <GROK_BOT_WEBHOOK_SECRET>
  */
@@ -52,6 +53,14 @@ export async function POST(request: Request) {
         action: "brief_request",
         format: payload.format ?? "markdown",
         hint: "演示环境：请访问 /brief 导出；后续可返回生成的 Markdown 正文。",
+      });
+    case "intake_parse":
+      return NextResponse.json({
+        status: "accepted",
+        action: "intake_parse",
+        hint: "请转发至 POST /api/intake/parse 获取 fields；前端 /intake 完成登记。",
+        forward: "/api/intake/parse",
+        text: payload.message ?? (payload.meta as { text?: string })?.text,
       });
     default:
       return NextResponse.json({

@@ -26,7 +26,9 @@ type MaintenanceMap = Record<
  */
 export function loadClientsForMode(mode: DataMode): ClientRecord[] {
   const raw = mode === "demo" ? demoClients : snapshotClients;
-  const ext = (mode === "demo" ? demoMaintenance : snapshotMaintenance) as MaintenanceMap;
+  const ext = (mode === "demo"
+    ? demoMaintenance
+    : snapshotMaintenance) as unknown as MaintenanceMap;
 
   return (raw as Record<string, unknown>[]).map((row) => {
     const id = row.id as string;

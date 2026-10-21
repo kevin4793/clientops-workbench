@@ -17,6 +17,13 @@ export const NAV_ITEMS: NavItem[] = [
     description: "今日维护全景与待办摘要",
   },
   {
+    id: "intake",
+    href: "/intake",
+    label: "高效录入",
+    short: "录入",
+    description: "粘贴/拍照识别，字段映射登记",
+  },
+  {
     id: "profiles",
     href: "/profiles",
     label: "客户档案",

@@ -31,12 +31,31 @@ export interface GapItem {
   resolved: boolean;
 }
 
+/** Kevin 档案扩展字段（高效录入映射） */
+export interface ClientExtendedProfile {
+  dob: string;
+  gender: string;
+  lastBranchVisit: string;
+  familySituation: string;
+  household: string;
+  assetRange: string;
+  hobbies: string;
+  quotesSaid: string;
+  personality: string;
+  riskTolerance: string;
+  otherBanksAssets: string;
+  primaryBanks: string;
+}
+
 export interface ClientProfileSummary {
   familyStructure: string;
   riskPreferenceTags: string[];
   recentContactSummary: string;
   birthday: string;
   memberSince?: string;
+  extended: ClientExtendedProfile;
+  productCode: string;
+  contactNotes: string;
 }
 
 export interface HoldingPosition {
@@ -125,4 +144,5 @@ export type NavModuleId =
   | "timeline"
   | "talks"
   | "expiry"
-  | "brief";
+  | "brief"
+  | "intake";

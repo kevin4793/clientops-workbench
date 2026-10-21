@@ -46,6 +46,16 @@ export function OverviewDashboard() {
         客户维护工作台覆盖档案、关怀、持仓、任务与服务记录；<strong className="font-medium text-teal-100">到期运营</strong>仅为其中一个模块。全部为虚构演示数据，不构成投资建议。
       </p>
 
+      <Link
+        href="/intake"
+        className="block rounded-xl border border-amber-600/40 bg-gradient-to-r from-amber-950/40 to-[#152a25] p-4 transition hover:border-amber-500/50"
+      >
+        <p className="text-sm font-semibold text-amber-100">高效录入 · Smart Intake</p>
+        <p className="mt-1 text-xs text-teal-200/80">
+          粘贴杂乱备注或上传图片 OCR → 字段映射核对 → 一键进客户档案
+        </p>
+      </Link>
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="待办维护任务" value={stats.openTasks} href="/tasks" />
         <StatCard label="待关怀事项" value={stats.careDue} href="/care" />

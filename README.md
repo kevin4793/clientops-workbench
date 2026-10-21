@@ -20,6 +20,7 @@ npm start
 | 路由 | 模块 |
 |------|------|
 | `/` | 总览仪表盘（跨模块摘要） |
+| `/intake` | **高效录入**（粘贴 / 图片 OCR → 字段核对登记） |
 | `/profiles` | 客户档案摘要 |
 | `/care` | 生日与节日关怀 |
 | `/holdings` | 多产品持仓 / 到期总览 |
@@ -37,7 +38,30 @@ npm start
 - 基础到期字段：`data/demo-clients.json`、`data/snapshot-clients.json`
 - 维护扩展字段：`data/demo-maintenance.json`、`data/snapshot-maintenance.json`（按客户 id 合并）
 - 业务基准日：`lib/dates.ts` → `REFERENCE_DATE`（2026-10-21）
-- 浏览器持久化：`localStorage` 键 `clientops-state-v2`
+- 浏览器持久化：`localStorage` 键 `clientops-state-v3`（含高效录入新增客户）
+
+## 高效录入（Smart Intake）
+
+路由：`/intake`
+
+1. **粘贴模式**：将微信备注、会议纪要等杂乱中文（可含粤普混排标签如「屋企」「几时来过网点」）贴入文本框，点「解析字段」。
+2. **图片模式**：拖拽或选择图片 → 浏览器 **Tesseract.js**（`chi_sim+eng`）本地 OCR → 文本可编辑 → 再解析。
+3. **解析**：`lib/intake-parser.ts` 启发式拆字段（姓名、产品代码、金额、日期 + Kevin 12 项档案字段）；也可 `POST /api/intake/parse` 统一入口。
+4. **核对**：每项带置信度（高/中/低）与**来源片段**；可手工改，系统不臆造原文没有的信息。
+5. **确认登记**：写入当前数据模式客户列表（`localStorage`），在 **客户档案** 可见，标签「高效录入」。
+
+### OCR 限制
+
+- 首次 OCR 会下载语言包，需网络；模糊/手写图可能识别率低，请改粘贴或人工改 OCR 文本。
+- 服务端视觉未启用；`POST /api/intake/parse` 收到 `imageBase64` 时返回 stub 说明。
+
+### 换成真实 LLM / Vision
+
+在 `app/api/intake/parse/route.ts` 中：
+
+- 对 `imageBase64` 调用视觉模型提取 `text`；
+- 对 `text` 可改用 LLM 结构化输出，再映射为 `IntakeFieldKey`；
+- Grok Bot 可 `POST /api/integrations/grok-bot` type=`intake_parse`，或直接转发 `POST /api/intake/parse`（`text` / `imageText`）。
 
 替换数据源：编辑 JSON，或实现 `GET /api/clients`；结构见 `lib/types.ts` 的 `ClientRecord`。
 
@@ -58,6 +82,9 @@ npm start
   ```
   ```json
   { "type": "brief_request", "format": "markdown" }
+  ```
+  ```json
+  { "type": "intake_parse", "text": "姓名：… 产品代码：…" }
   ```
 - 可选鉴权：请求头 `Authorization: Bearer <GROK_BOT_WEBHOOK_SECRET>`
 - 演示环境不做真实写库，返回 `accepted` 与前端路由提示；Kevin 的 Grok Bot 可据此对接后再实现服务端处理器。

@@ -1,0 +1,213 @@
+[
+  {
+    "id": "demo-001",
+    "displayName": "演练客户·云杉",
+    "maskedName": "云**",
+    "productType": "理财",
+    "productName": "演练稳健理财·180天",
+    "contractNo": "DEMO-LC-2026-001",
+    "expiryDate": "2026-10-21",
+    "principalAmount": 1200000,
+    "currency": "CNY",
+    "tags": ["高净值"],
+    "followUpStatus": "待联系",
+    "lastContactAt": "2026-10-18",
+    "lastContactNote": "短信已发，待电话确认续作意向",
+    "reconciliation": {
+      "expectedAction": "到期本金及收益划回活期",
+      "paymentStatus": "待确认",
+      "receiptRef": "RCPT-DEMO-8812",
+      "status": "pending",
+      "note": "演练：回执已登记，金额待二次核对"
+    },
+    "timeline": [
+      { "id": "t1", "date": "2026-04-24", "label": "产品成立/申购确认", "done": true },
+      { "id": "t2", "date": "2026-10-18", "label": "到期前 T-3 提醒", "done": true },
+      { "id": "t3", "date": "2026-10-21", "label": "到期日", "done": false },
+      { "id": "t4", "date": "2026-10-23", "label": "预计到账日（演练）", "done": false }
+    ],
+    "gaps": [
+      { "id": "g1", "label": "确认客户资金用途（续作/转出）", "resolved": false },
+      { "id": "g2", "label": "核对回执与系统应到账金额", "resolved": false }
+    ],
+    "suggestedActions": [
+      "今日 15:00 前电话确认到期资金安排",
+      "在系统中登记到账核对结果",
+      "如需面签，预约网点合规双录"
+    ],
+    "complianceChecks": [
+      { "id": "c1", "label": "已向客户说明不承诺收益", "checked": false },
+      { "id": "c2", "label": "未向客户推荐具体新产品", "checked": true }
+    ],
+    "isDrill": true
+  },
+  {
+    "id": "demo-002",
+    "displayName": "演练客户·银杏",
+    "maskedName": "银**",
+    "productType": "保险",
+    "productName": "演练年金险·演示保单",
+    "contractNo": "DEMO-INS-0092",
+    "expiryDate": "2026-10-24",
+    "principalAmount": 800000,
+    "currency": "CNY",
+    "tags": [],
+    "followUpStatus": "已联系",
+    "lastContactAt": "2026-10-20",
+    "lastContactNote": "客户表示到期后考虑续保，需发送条款摘要",
+    "reconciliation": {
+      "expectedAction": "满期金给付",
+      "paymentStatus": "未到账",
+      "status": "matched",
+      "note": "演练：到期日前，状态正常"
+    },
+    "timeline": [
+      { "id": "t1", "date": "2021-10-24", "label": "保单生效", "done": true },
+      { "id": "t2", "date": "2026-10-21", "label": "满期前回访", "done": true },
+      { "id": "t3", "date": "2026-10-24", "label": "满期日", "done": false }
+    ],
+    "gaps": [
+      { "id": "g1", "label": "发送满期给付说明（非推销）", "resolved": true }
+    ],
+    "suggestedActions": [
+      "T-3 再次确认受益人信息",
+      "登记犹豫期/满期相关合规回访记录"
+    ],
+    "complianceChecks": [
+      { "id": "c1", "label": "回访录音/记录已保存", "checked": true },
+      { "id": "c2", "label": "未承诺满期给付以外收益", "checked": true }
+    ],
+    "isDrill": true
+  },
+  {
+    "id": "demo-003",
+    "displayName": "演练客户·水松",
+    "maskedName": "水**",
+    "productType": "理财",
+    "productName": "演练理财·期限款",
+    "contractNo": "DEMO-003",
+    "expiryDate": "2026-10-19",
+    "principalAmount": 3500000,
+    "currency": "CNY",
+    "tags": ["高净值", "重点核对"],
+    "followUpStatus": "待回访",
+    "lastContactAt": "2026-10-20",
+    "lastContactNote": "客户反馈网银金额与短信不一致",
+    "reconciliation": {
+      "expectedAction": "到期本息到账",
+      "paymentStatus": "部分到账",
+      "receiptRef": "RCPT-DEMO-3301",
+      "status": "mismatch",
+      "note": "演练逾期核对场景：应到 3,512,000 vs 回执 3,500,000"
+    },
+    "timeline": [
+      { "id": "t1", "date": "2026-04-19", "label": "申购确认", "done": true },
+      { "id": "t2", "date": "2026-10-19", "label": "到期日（已逾）", "done": true },
+      { "id": "t3", "date": "2026-10-20", "label": "登记差异工单", "done": true },
+      { "id": "t4", "date": "2026-10-22", "label": "计划完成核对", "done": false }
+    ],
+    "gaps": [
+      { "id": "g1", "label": "运营工单：差额原因说明", "resolved": false },
+      { "id": "g2", "label": "客户二次确认收款账户", "resolved": false },
+      { "id": "g3", "label": "更新跟进状态为已办结", "resolved": false }
+    ],
+    "suggestedActions": [
+      "优先处理到账差异并同步客户",
+      "在作战室勾选合规项后结案",
+      "今日内完成回访登记"
+    ],
+    "complianceChecks": [
+      { "id": "c1", "label": "差异说明已向客户披露", "checked": false },
+      { "id": "c2", "label": "未借机推介其他产品", "checked": true }
+    ],
+    "isDrill": true
+  },
+  {
+    "id": "demo-004",
+    "displayName": "演练客户·青竹",
+    "maskedName": "青**",
+    "productType": "信托",
+    "productName": "演练信托计划·12个月",
+    "contractNo": "DEMO-XT-7710",
+    "expiryDate": "2026-10-28",
+    "principalAmount": 6000000,
+    "currency": "CNY",
+    "tags": ["高净值"],
+    "followUpStatus": "待联系",
+    "reconciliation": {
+      "expectedAction": "信托份额到期清算",
+      "paymentStatus": "未到账",
+      "status": "pending"
+    },
+    "timeline": [
+      { "id": "t1", "date": "2025-10-28", "label": "信托成立", "done": true },
+      { "id": "t2", "date": "2026-10-25", "label": "清算通知（计划）", "done": false },
+      { "id": "t3", "date": "2026-10-28", "label": "到期日", "done": false }
+    ],
+    "gaps": [{ "id": "g1", "label": "发送清算流程说明", "resolved": false }],
+    "suggestedActions": ["预约高净值专线回访", "准备信托清算 FAQ（非销售）"],
+    "complianceChecks": [
+      { "id": "c1", "label": "信托风险揭示已存档", "checked": true }
+    ],
+    "isDrill": true
+  },
+  {
+    "id": "demo-005",
+    "displayName": "演练客户·紫薇",
+    "maskedName": "紫**",
+    "productType": "存款",
+    "productName": "演练大额存单·3年期",
+    "contractNo": "DEMO-CD-5521",
+    "expiryDate": "2026-10-21",
+    "principalAmount": 500000,
+    "currency": "CNY",
+    "tags": [],
+    "followUpStatus": "已办结",
+    "lastContactAt": "2026-10-21",
+    "lastContactNote": "客户选择自动转存，已办结",
+    "reconciliation": {
+      "expectedAction": "到期本息",
+      "paymentStatus": "已到账",
+      "receiptRef": "RCPT-DEMO-9900",
+      "status": "matched"
+    },
+    "timeline": [
+      { "id": "t1", "date": "2023-10-21", "label": "存单起息", "done": true },
+      { "id": "t2", "date": "2026-10-21", "label": "到期日", "done": true }
+    ],
+    "gaps": [],
+    "suggestedActions": ["归档案例，无需外呼"],
+    "complianceChecks": [
+      { "id": "c1", "label": "转存规则已向客户说明", "checked": true }
+    ],
+    "isDrill": true
+  },
+  {
+    "id": "demo-006",
+    "displayName": "演练客户·海棠",
+    "maskedName": "海**",
+    "productType": "基金",
+    "productName": "演练固收+·开放期",
+    "contractNo": "DEMO-FUND-1188",
+    "expiryDate": "2026-11-05",
+    "principalAmount": 280000,
+    "currency": "CNY",
+    "tags": [],
+    "followUpStatus": "待联系",
+    "reconciliation": {
+      "expectedAction": "开放期赎回确认",
+      "paymentStatus": "未到账",
+      "status": "matched"
+    },
+    "timeline": [
+      { "id": "t1", "date": "2026-11-01", "label": "开放期开始", "done": false },
+      { "id": "t2", "date": "2026-11-05", "label": "客户选定赎回日（演练）", "done": false }
+    ],
+    "gaps": [{ "id": "g1", "label": "确认是否在开放窗口操作", "resolved": false }],
+    "suggestedActions": ["提醒开放期规则，不提供择时建议"],
+    "complianceChecks": [
+      { "id": "c1", "label": "基金风险等级匹配已确认", "checked": false }
+    ],
+    "isDrill": true
+  }
+]

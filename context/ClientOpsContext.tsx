@@ -1,0 +1,251 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { loadClientsForMode, DEMO_ACTOR } from "@/lib/data-source";
+import type {
+  AuditEntry,
+  ClientRecord,
+  DataMode,
+  FollowUpStatus,
+} from "@/lib/types";
+
+const STORAGE_KEY = "clientops-state-v1";
+
+interface PersistedState {
+  dataMode: DataMode;
+  clientsByMode: Record<DataMode, ClientRecord[]>;
+  auditLog: AuditEntry[];
+}
+
+interface ClientOpsContextValue {
+  dataMode: DataMode;
+  setDataMode: (mode: DataMode) => void;
+  clients: ClientRecord[];
+  updateFollowUp: (id: string, status: FollowUpStatus) => void;
+  updateComplianceCheck: (
+    id: string,
+    checkId: string,
+    checked: boolean
+  ) => void;
+  updateGap: (id: string, gapId: string, resolved: boolean) => void;
+  getClient: (id: string) => ClientRecord | undefined;
+  auditLog: AuditEntry[];
+  addAudit: (action: string, clientId?: string, detail?: string) => void;
+  generateTodayTodos: () => ClientRecord[];
+}
+
+const ClientOpsContext = createContext<ClientOpsContextValue | null>(null);
+
+function defaultState(): PersistedState {
+  return {
+    dataMode: "demo",
+    clientsByMode: {
+      demo: loadClientsForMode("demo"),
+      snapshot: loadClientsForMode("snapshot"),
+    },
+    auditLog: [
+      {
+        id: "audit-init",
+        at: new Date("2026-10-21T09:00:00+08:00").toISOString(),
+        actor: DEMO_ACTOR,
+        action: "打开工作台（演示数据）",
+        detail: "系统初始化审计记录",
+      },
+    ],
+  };
+}
+
+function loadState(): PersistedState {
+  if (typeof window === "undefined") return defaultState();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw) as PersistedState;
+    return {
+      ...defaultState(),
+      ...parsed,
+      clientsByMode: {
+        demo: parsed.clientsByMode?.demo ?? loadClientsForMode("demo"),
+        snapshot:
+          parsed.clientsByMode?.snapshot ?? loadClientsForMode("snapshot"),
+      },
+    };
+  } catch {
+    return defaultState();
+  }
+}
+
+export function ClientOpsProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<PersistedState>(() => defaultState());
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setState(loadState());
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [state, hydrated]);
+
+  const clients = state.clientsByMode[state.dataMode];
+
+  const addAudit = useCallback(
+    (action: string, clientId?: string, detail?: string) => {
+      const entry: AuditEntry = {
+        id: `audit-${Date.now()}`,
+        at: new Date().toISOString(),
+        actor: DEMO_ACTOR,
+        action,
+        clientId,
+        detail,
+      };
+      setState((s) => ({ ...s, auditLog: [entry, ...s.auditLog].slice(0, 200) }));
+    },
+    []
+  );
+
+  const patchClient = useCallback((id: string, patch: Partial<ClientRecord>) => {
+    setState((s) => {
+      const list = s.clientsByMode[s.dataMode].map((c) =>
+        c.id === id ? { ...c, ...patch } : c
+      );
+      return {
+        ...s,
+        clientsByMode: { ...s.clientsByMode, [s.dataMode]: list },
+      };
+    });
+  }, []);
+
+  const updateFollowUp = useCallback(
+    (id: string, status: FollowUpStatus) => {
+      patchClient(id, {
+        followUpStatus: status,
+        lastContactAt: new Date().toISOString().slice(0, 10),
+      });
+      addAudit("更新跟进状态", id, status);
+    },
+    [addAudit, patchClient]
+  );
+
+  const updateComplianceCheck = useCallback(
+    (id: string, checkId: string, checked: boolean) => {
+      setState((s) => {
+        const list = s.clientsByMode[s.dataMode].map((c) => {
+          if (c.id !== id) return c;
+          return {
+            ...c,
+            complianceChecks: c.complianceChecks.map((ch) =>
+              ch.id === checkId ? { ...ch, checked } : ch
+            ),
+          };
+        });
+        return {
+          ...s,
+          clientsByMode: { ...s.clientsByMode, [s.dataMode]: list },
+        };
+      });
+      addAudit("合规检查项变更", id, checkId);
+    },
+    [addAudit]
+  );
+
+  const updateGap = useCallback(
+    (id: string, gapId: string, resolved: boolean) => {
+      setState((s) => {
+        const list = s.clientsByMode[s.dataMode].map((c) => {
+          if (c.id !== id) return c;
+          return {
+            ...c,
+            gaps: c.gaps.map((g) =>
+              g.id === gapId ? { ...g, resolved } : g
+            ),
+          };
+        });
+        return {
+          ...s,
+          clientsByMode: { ...s.clientsByMode, [s.dataMode]: list },
+        };
+      });
+      addAudit("更新缺口清单", id, gapId);
+    },
+    [addAudit]
+  );
+
+  const setDataMode = useCallback(
+    (mode: DataMode) => {
+      setState((s) => ({ ...s, dataMode: mode }));
+      addAudit(
+        mode === "demo" ? "切换至公开演练数据" : "切换至授权测试快照"
+      );
+    },
+    [addAudit]
+  );
+
+  const getClient = useCallback(
+    (id: string) => clients.find((c) => c.id === id),
+    [clients]
+  );
+
+  const generateTodayTodos = useCallback(() => {
+    return clients.filter(
+      (c) =>
+        c.followUpStatus !== "已办结" &&
+        (c.followUpStatus === "待联系" || c.followUpStatus === "待回访")
+    );
+  }, [clients]);
+
+  const value = useMemo(
+    () => ({
+      dataMode: state.dataMode,
+      setDataMode,
+      clients,
+      updateFollowUp,
+      updateComplianceCheck,
+      updateGap,
+      getClient,
+      auditLog: state.auditLog,
+      addAudit,
+      generateTodayTodos,
+    }),
+    [
+      state.dataMode,
+      state.auditLog,
+      clients,
+      setDataMode,
+      updateFollowUp,
+      updateComplianceCheck,
+      updateGap,
+      getClient,
+      addAudit,
+      generateTodayTodos,
+    ]
+  );
+
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0f1f1c] text-teal-100">
+        加载工作台…
+      </div>
+    );
+  }
+
+  return (
+    <ClientOpsContext.Provider value={value}>{children}</ClientOpsContext.Provider>
+  );
+}
+
+export function useClientOps() {
+  const ctx = useContext(ClientOpsContext);
+  if (!ctx) throw new Error("useClientOps must be used within ClientOpsProvider");
+  return ctx;
+}

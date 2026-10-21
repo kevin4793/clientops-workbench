@@ -1,0 +1,57 @@
+[
+  {
+    "id": "snap-001",
+    "displayName": "授权快照·测试甲",
+    "maskedName": "测**",
+    "productType": "理财",
+    "productName": "授权环境·净值型理财（测试）",
+    "contractNo": "AUTH-SNAP-001",
+    "expiryDate": "2026-10-22",
+    "principalAmount": 2000000,
+    "currency": "CNY",
+    "tags": ["授权测试"],
+    "followUpStatus": "待联系",
+    "lastContactNote": "来自授权快照数据集，非公开演练库",
+    "reconciliation": {
+      "expectedAction": "测试到期划款",
+      "paymentStatus": "待确认",
+      "status": "pending",
+      "note": "仅用于验证「真实数据」模式 UI"
+    },
+    "timeline": [
+      { "id": "t1", "date": "2026-10-22", "label": "测试到期日", "done": false }
+    ],
+    "gaps": [{ "id": "g1", "label": "验证权限开关与数据隔离", "resolved": false }],
+    "suggestedActions": ["确认快照模式水印展示", "勿将本数据当作真实客户"],
+    "complianceChecks": [
+      { "id": "c1", "label": "测试环境已标识", "checked": true }
+    ],
+    "isDrill": false
+  },
+  {
+    "id": "snap-002",
+    "displayName": "授权快照·测试乙",
+    "maskedName": "测**",
+    "productType": "保险",
+    "productName": "授权环境·保单满期（测试）",
+    "contractNo": "AUTH-SNAP-002",
+    "expiryDate": "2026-10-19",
+    "principalAmount": 1500000,
+    "currency": "CNY",
+    "tags": ["授权测试", "高净值"],
+    "followUpStatus": "待回访",
+    "reconciliation": {
+      "expectedAction": "满期金测试给付",
+      "paymentStatus": "部分到账",
+      "receiptRef": "AUTH-R-002",
+      "status": "mismatch"
+    },
+    "timeline": [
+      { "id": "t1", "date": "2026-10-19", "label": "满期（测试）", "done": true }
+    ],
+    "gaps": [{ "id": "g1", "label": "快照模式到账差异演练", "resolved": false }],
+    "suggestedActions": ["在授权环境完成端到端核对"],
+    "complianceChecks": [{ "id": "c1", "label": "数据已脱敏", "checked": true }],
+    "isDrill": false
+  }
+]

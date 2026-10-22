@@ -15,6 +15,15 @@ npm run build
 npm start
 ```
 
+### 线上部署（替代 Manus 旧链接）
+
+旧地址 `https://clientops-hybuephs.manus.space` **没有**本仓库新功能。要公网打开 **高效录入** 等模块，请部署本项目：
+
+- **详细步骤**：[docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)
+- **最短路径**：代码推到 GitHub → [vercel.com/new](https://vercel.com/new) 导入仓库 → Deploy → 访问 `https://<项目名>.vercel.app/intake`
+
+可选环境变量见 [.env.example](.env.example)。仓库根目录含 `vercel.json`（默认 `npm run build`，区域含香港/新加坡节点以利于国内访问 OCR CDN）。
+
 ## 模块导航
 
 | 路由 | 模块 |
@@ -94,7 +103,7 @@ npm start
 1. 在本仓库继续迭代 UI、数据模型与集成逻辑（Manus 链接不再作为交付物）。
 2. Grok Bot 通过 HTTPS 调用部署后的 `/api/integrations/grok-bot`（本地开发可用隧道转发）。
 3. Notion 同步建议在 CI 或定时任务中调用 `/api/integrations/notion` 的 POST 实现。
-4. 部署：Vercel / 行内静态托管均可；`npm run build` 为发布前检查。
+4. 部署：见 [docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)；`npm run build` 为发布前检查。
 
 ## 技术结构
 

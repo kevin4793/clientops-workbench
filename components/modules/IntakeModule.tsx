@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import { useClientOps } from "@/context/ClientOpsContext";
 import { parseIntakeText } from "@/lib/intake-parser";
+import { fileToCompressedBase64 } from "@/lib/compress-image-client";
+import type { IntakeEngine } from "@/lib/intake-parse-response";
 import {
   INTAKE_FIELD_META,
   type IntakeFieldKey,
@@ -38,6 +40,15 @@ function confidenceLabel(c: IntakeFieldValue["confidence"]) {
   return { text: "低", className: "bg-slate-700 text-slate-200" };
 }
 
+type ParseApiPayload = {
+  status?: string;
+  engine?: IntakeEngine;
+  engineLabel?: string;
+  message?: string;
+  rawText?: string;
+  fields?: Record<IntakeFieldKey, IntakeFieldValue>;
+};
+
 export function IntakeModule() {
   const { registerClientFromIntake } = useClientOps();
   const [mode, setMode] = useState<"paste" | "image">("paste");
@@ -46,8 +57,10 @@ export function IntakeModule() {
   const [form, setForm] = useState<Record<IntakeFieldKey, IntakeFieldValue>>(
     emptyIntakeFields()
   );
-  const [ocrStatus, setOcrStatus] = useState<string | null>(null);
+  const [statusLine, setStatusLine] = useState<string | null>(null);
+  const [engineLabel, setEngineLabel] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -58,29 +71,119 @@ export function IntakeModule() {
     setSavedId(null);
   }, []);
 
-  async function runParse(text: string) {
-    setParsing(true);
-    try {
-      const res = await fetch("/api/intake/parse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+  function applyApiPayload(data: ParseApiPayload, fallbackText: string) {
+    if (data.fields) {
+      applyParse({
+        rawText: data.rawText ?? fallbackText,
+        fields: data.fields,
       });
-      const data = await res.json();
-      if (data.fields) {
-        applyParse({ rawText: text, fields: data.fields });
-      } else {
-        applyParse(parseIntakeText(text));
+      setEngineLabel(
+        data.engineLabel ??
+          (data.engine === "qwen-vl"
+            ? "通义千问视觉"
+            : data.engine === "qwen-text"
+              ? "通义千问文本"
+              : "本地规则 / Tesseract")
+      );
+      if (data.message) setStatusLine(data.message);
+      return true;
+    }
+    return false;
+  }
+
+  async function runLocalFallback(text: string, prefix?: string) {
+    const local = parseIntakeText(text);
+    applyParse(local);
+    setEngineLabel("本地规则解析 + Tesseract OCR");
+    setStatusLine(
+      prefix
+        ? `${prefix}已使用本地识别。`
+        : "已使用本地规则解析（未配置或通义调用失败）。"
+    );
+  }
+
+  async function postParse(body: Record<string, string>) {
+    const res = await fetch("/api/intake/parse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return (await res.json()) as ParseApiPayload;
+  }
+
+  async function runTextParse(text: string) {
+    setParsing(true);
+    setStatusLine(null);
+    try {
+      const data = await postParse({ text });
+      if (!applyApiPayload(data, text)) {
+        await runLocalFallback(text);
       }
     } catch {
-      applyParse(parseIntakeText(text));
+      await runLocalFallback(text, "网络错误，");
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  async function runImageParse(file: File) {
+    setParsing(true);
+    setStatusLine("正在压缩并发送至服务端（阿里云通义千问）…");
+    try {
+      const { base64, mimeType } = await fileToCompressedBase64(file, 1600);
+      const data = await postParse({
+        imageBase64: base64,
+        mimeType,
+        text: rawText,
+      });
+
+      if (applyApiPayload(data, rawText)) {
+        if (data.engine === "qwen-vl") {
+          setStatusLine("图片已发送至阿里云识别完成，请核对字段。");
+        }
+        return;
+      }
+
+      setStatusLine(
+        (data.message ? `${data.message} ` : "") +
+          "正在本地 Tesseract OCR 回退…"
+      );
+      const ocr = await extractTextFromImage(file);
+      if (ocr.ok) {
+        setRawText(ocr.text);
+        const textData = await postParse({ text: ocr.text });
+        if (!applyApiPayload(textData, ocr.text)) {
+          await runLocalFallback(ocr.text, "通义与接口均失败，");
+        } else if (textData.engine !== "qwen-text" && textData.engine !== "qwen-vl") {
+          setEngineLabel(`${textData.engineLabel ?? "本地"}（OCR 后）`);
+        } else {
+          setEngineLabel(`${textData.engineLabel}（OCR 回退后）`);
+        }
+      } else {
+        setStatusLine(`${ocr.error}。${ocr.hint}`);
+        await runLocalFallback("", "OCR 失败，");
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "图片解析失败";
+      setStatusLine(msg);
+      if (pendingFile) {
+        const ocr = await extractTextFromImage(pendingFile);
+        if (ocr.ok) {
+          setRawText(ocr.text);
+          await runLocalFallback(ocr.text, "异常回退，");
+        }
+      }
     } finally {
       setParsing(false);
     }
   }
 
   function handleParseClick() {
-    void runParse(rawText);
+    if (mode === "image" && pendingFile) {
+      void runImageParse(pendingFile);
+      return;
+    }
+    void runTextParse(rawText);
   }
 
   function updateField(key: IntakeFieldKey, value: string) {
@@ -96,16 +199,10 @@ export function IntakeModule() {
   }
 
   async function onFile(file: File) {
+    setPendingFile(file);
     setPreviewUrl(URL.createObjectURL(file));
-    setOcrStatus("识别中…（首次会下载语言包，稍等）");
-    const ocr = await extractTextFromImage(file);
-    if (ocr.ok) {
-      setRawText(ocr.text);
-      setOcrStatus("OCR 完成，已填入文本区，请核对后点「解析字段」");
-      void runParse(ocr.text);
-    } else {
-      setOcrStatus(`${ocr.error}。${ocr.hint}`);
-    }
+    setSavedId(null);
+    void runImageParse(file);
   }
 
   function onDrop(e: React.DragEvent) {
@@ -122,11 +219,26 @@ export function IntakeModule() {
     setSavedId(record.id);
   }
 
+  const canParse =
+    mode === "image" ? !!pendingFile || !!rawText.trim() : !!rawText.trim();
+
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <p className="rounded-xl border border-amber-700/30 bg-amber-950/20 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
         仅辅助录入，不构成投资建议；演示数据。系统<strong>不会</strong>自动编造原文没有的字段，请人工核对后再登记。
       </p>
+      <p className="rounded-xl border border-sky-800/40 bg-sky-950/30 px-3 py-2 text-xs text-sky-100/90">
+        上传图片进行识别时，压缩后的图像将发送至<strong>阿里云百炼（通义千问）</strong>处理；密钥仅存于服务端。无密钥或调用失败时自动回退本地 OCR + 规则解析。
+      </p>
+
+      {engineLabel && (
+        <p className="text-xs text-teal-300">
+          当前识别方式：<span className="font-medium text-teal-100">{engineLabel}</span>
+        </p>
+      )}
+      {statusLine && (
+        <p className="text-xs text-amber-200/90">{statusLine}</p>
+      )}
 
       <div className="flex gap-2">
         <button
@@ -159,7 +271,7 @@ export function IntakeModule() {
       {mode === "paste" ? (
         <textarea
           className="min-h-[160px] w-full rounded-xl border border-teal-800 bg-[#0f1f1c] p-3 text-sm text-teal-50"
-          placeholder="粘贴微信备注、手写清单 OCR 结果、会议纪要片段…"
+          placeholder="粘贴微信备注、手写清单、会议纪要片段…"
           value={rawText}
           onChange={(e) => setRawText(e.target.value)}
         />
@@ -178,7 +290,7 @@ export function IntakeModule() {
           )}
           <p className="text-sm text-teal-200">拖拽图片到此处，或选择文件</p>
           <p className="mt-1 text-xs text-teal-500">
-            本地 Tesseract OCR（chi_sim+eng）；识别后请核对
+            长边压缩至 ≤1600px 后上传；优先通义千问视觉，失败则 Tesseract
           </p>
           <input
             ref={fileRef}
@@ -190,9 +302,6 @@ export function IntakeModule() {
               if (f) void onFile(f);
             }}
           />
-          {ocrStatus && (
-            <p className="mt-3 text-xs text-amber-100/90">{ocrStatus}</p>
-          )}
         </div>
       )}
 
@@ -201,13 +310,13 @@ export function IntakeModule() {
           className="min-h-[100px] w-full rounded-xl border border-teal-800 bg-[#0f1f1c] p-3 text-xs text-teal-300"
           value={rawText}
           onChange={(e) => setRawText(e.target.value)}
-          aria-label="OCR 文本可编辑"
+          aria-label="识别文本可编辑"
         />
       )}
 
       <button
         type="button"
-        disabled={!rawText.trim() || parsing}
+        disabled={!canParse || parsing}
         onClick={handleParseClick}
         className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
       >

@@ -8,7 +8,22 @@ Manus 预览域 **不会** 更新本仓库。要在线上使用 `/intake` 等页
 - 一个 [Vercel](https://vercel.com) 账号
 - 代码在 **GitHub / GitLab / Bitbucket** 之一（推荐 GitHub，与 Vercel 一键关联）
 
-> 若代码只在 Cursor Origin：在 Cursor 里用 **Create repo** 创建远程仓库，或 `git remote add github git@github.com:YOU/clientops-workbench.git` 后 `git push`。
+### Kevin（GitHub: [kevin4793](https://github.com/kevin4793)）推荐仓库名
+
+`https://github.com/kevin4793/clientops-workbench`
+
+1. [新建空仓库](https://github.com/new)：`clientops-workbench`，**不要**初始化 README  
+2. 在本项目目录执行：
+
+```bash
+git remote add github https://github.com/kevin4793/clientops-workbench.git
+# 若已存在 github 远程，用：git remote set-url github https://github.com/kevin4793/clientops-workbench.git
+git push -u github main
+```
+
+> 若代码只在 Cursor Origin：在 Cursor 里用 **Create repo** 发布到 GitHub，或按上表添加 `github` 远程后 `git push`。
+
+> 若 `git push github` 提示 404，说明 GitHub 上还没创建该仓库，先完成第 1 步。
 
 ## 方式 A：Vercel 控制台（推荐）
 

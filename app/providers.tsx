@@ -1,7 +1,7 @@
 "use client";
 
-import { ClientOpsProvider } from "@/context/ClientOpsContext";
+import { SecureClientsProvider } from "@/context/SecureClientsContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <ClientOpsProvider>{children}</ClientOpsProvider>;
+  return <SecureClientsProvider>{children}</SecureClientsProvider>;
 }

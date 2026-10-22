@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
-import { useClientOps } from "@/context/ClientOpsContext";
+import { useSecureClients } from "@/context/SecureClientsContext";
+import {
+  SECURE_INTAKE_FIELD_KEYS,
+  intakeFieldsToSecureInput,
+} from "@/lib/secure/intake-map";
 import { parseIntakeText } from "@/lib/intake-parser";
 import { fileToCompressedBase64 } from "@/lib/compress-image-client";
 import type { IntakeEngine } from "@/lib/intake-parse-response";
@@ -14,25 +18,12 @@ import {
   emptyIntakeFields,
 } from "@/lib/intake-types";
 import { extractTextFromImage } from "@/lib/ocr";
-import type { IntakeFormValues } from "@/lib/build-client-from-intake";
-
 const SAMPLE = `姓名：陈大明
-性别：男
-出生：1985-07-22
-几时来过网点：上个月周三下午
-屋企人情况：老婆+两个仔，父母同住
-家庭成员组合：4口之家
-资产大概：800万左右
-爱好：打羽毛球、饮茶
-讲过的话：「唔想太激，稳阵先得」
-性格：爽快，讲嘢直接
-风险承受能力：稳健 R2
-其他银行有没有钱：招行有一点理财
-主要结余：我行活期+定期
-产品代码：DEMO-LC-2026-088
+产品代码：LC-2026-088
 金额：120万
 到期日：2026-12-01
-备注：微信讲过想了解下个月开放期`;
+出生：07-22
+备注：微信讲过想了解下个月开放期，唔想太激`;
 
 function confidenceLabel(c: IntakeFieldValue["confidence"]) {
   if (c === "high") return { text: "高", className: "bg-emerald-800/60 text-emerald-100" };
@@ -50,7 +41,7 @@ type ParseApiPayload = {
 };
 
 export function IntakeModule() {
-  const { registerClientFromIntake } = useClientOps();
+  const { saveClient } = useSecureClients();
   const [mode, setMode] = useState<"paste" | "image">("paste");
   const [rawText, setRawText] = useState("");
   const [parseResult, setParseResult] = useState<IntakeParseResult | null>(null);
@@ -211,11 +202,9 @@ export function IntakeModule() {
     if (f?.type.startsWith("image/")) void onFile(f);
   }
 
-  function handleConfirm() {
-    const values = Object.fromEntries(
-      Object.entries(form).map(([k, v]) => [k, v.value])
-    ) as IntakeFormValues;
-    const record = registerClientFromIntake(values);
+  async function handleConfirm() {
+    const input = intakeFieldsToSecureInput(form);
+    const record = await saveClient(input);
     setSavedId(record.id);
   }
 
@@ -332,7 +321,7 @@ export function IntakeModule() {
             来源摘要仅展示解析依据，未识别字段请留空。
           </p>
           <div className="space-y-3">
-            {(Object.keys(INTAKE_FIELD_META) as IntakeFieldKey[]).map((key) => {
+            {SECURE_INTAKE_FIELD_KEYS.map((key) => {
               const meta = INTAKE_FIELD_META[key];
               const field = form[key];
               const badge = confidenceLabel(field.confidence);

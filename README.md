@@ -1,139 +1,74 @@
 # 客户维护工作台 · Client Maintenance Ops
 
-面向**银行理财经理**的客户全生命周期维护运营平台（Next.js App Router + TypeScript + Tailwind）。  
-到期与续期只是其中一个模块；同一工作台还覆盖档案、关怀、持仓、任务、服务记录、合规话术与晨会简报。
+面向银行理财经理的**加密云端**客户维护应用（Next.js · Vercel `hkg1`）。
 
-> **合规**：全部为虚构演示客户，不提供投资建议；话术含风险提示模板。  
-> **原型说明**：早期 Manus 预览（`clientops-hybuephs.manus.space`）仅作交互参考，**已退役**；本仓库为 Cursor Origin 上的长期可维护代码基线。
+- **单用户登录**：`APP_PASSWORD` + 签名 Session Cookie
+- **Neon Postgres**：客户记录在服务端 **AES-256-GCM** 加密后存储（`DATA_KEY`）
+- **字段收窄**：仅姓名、客户编号、生日 MM-DD、产品、到期日、金额、备注（不存手机/身份证/账号）
+- **高效录入**：通义千问（可选）+ 本地回退；**导入/导出** CSV/Excel（飞书表格）
 
-## 快速开始
+> 仓库内 JSON 演示数据**不会**自动上传云端。
+
+## 本地开发
 
 ```bash
 npm install
-npm run dev    # http://localhost:43123
+cp .env.example .env.local   # 填入必填项
+npm run dev
+npm test
 npm run build
-npm start
 ```
 
-### 线上部署（替代 Manus 旧链接）
+未配置 `APP_PASSWORD` 时访问任意页会进入 `/setup`（全站锁定）。
 
-旧地址 `https://clientops-hybuephs.manus.space` **没有**本仓库新功能。要公网打开 **高效录入** 等模块，请部署本项目：
+## Vercel + Neon（Kevin 推荐步骤）
 
-- **详细步骤**：[docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)
-- **GitHub 账号**：[kevin4793](https://github.com/kevin4793) — 请先创建仓库 **`clientops-workbench`**（见下方），再部署。
+1. 项目 **Storage / Marketplace** → **Neon** → **Create / Connect**
+2. 区域选 **Singapore**（或离香港最近）
+3. 自动注入 `DATABASE_URL`
+4. **Settings → Environment Variables** 填入下方变量 → **Redeploy**
 
-**一键部署（仓库创建并 push 后可用）：**
+## 生产环境变量
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fkevin4793%2Fclientops-workbench&project-name=clientops-workbench&repository-name=clientops-workbench)
+| 变量 | 必填 | 说明 |
+|------|------|------|
+| `APP_PASSWORD` | 是 | 登录密码（自行设定强密码） |
+| `SESSION_SECRET` | 是 | 会话签名，随机长串：`openssl rand -base64 32` |
+| `DATABASE_URL` | 是 | Neon 连接串（Marketplace 注入） |
+| `DATA_KEY` | 是 | 64 位十六进制：`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `BOT_API_TOKEN` | 建议 | Grok Bot 只读：`GET /api/expiring?days=7`，`Authorization: Bearer …` |
+| `DASHSCOPE_API_KEY` | 可选 | 高效录入通义千问 |
+| `QWEN_VL_MODEL` | 可选 | 默认 `qwen-vl-max` |
+| `QWEN_TEXT_MODEL` | 可选 | 默认 `qwen-plus` |
 
-**首次推送到 GitHub（在本地 / Cursor 终端，已有本仓库代码时）：**
+**切勿**使用 `NEXT_PUBLIC_` 暴露密钥。
 
-```bash
-# 1. 在 https://github.com/new 创建空仓库 kevin4793/clientops-workbench（不要加 README）
-git remote add github https://github.com/kevin4793/clientops-workbench.git
-git push -u github main
-# 2. 打开上一「Deploy with Vercel」按钮，或 https://vercel.com/new 导入该仓库
-# 3. 部署完成后访问 https://<你的项目>.vercel.app/intake
-```
+## 模块
 
-可选环境变量见 [.env.example](.env.example)。仓库根目录含 `vercel.json`（默认 `npm run build`，区域 `hkg1`）。
-
-## 模块导航
-
-| 路由 | 模块 |
+| 路由 | 说明 |
 |------|------|
-| `/` | 总览仪表盘（跨模块摘要） |
-| `/intake` | **高效录入**（粘贴 / 图片 OCR → 字段核对登记） |
-| `/profiles` | 客户档案摘要 |
-| `/care` | 生日与节日关怀 |
-| `/holdings` | 多产品持仓 / 到期总览 |
-| `/tasks` | 跟进任务板（待联系 / 已约访 / 已办结） |
-| `/timeline` | 服务记录时间线 |
-| `/talks` | 合规话术库 |
-| `/expiry` | **到期运营**（看板、核对、作战室入口） |
-| `/war-room/[id]` | 续期作战室 |
-| `/brief` | 晨会简报 |
+| `/login` | 登录 |
+| `/setup` | 环境未配置说明 |
+| `/` | 总览 |
+| `/profiles` | 客户列表（加密库） |
+| `/intake` | 高效录入 |
+| `/expiry` | 到期看板 |
+| `/import-export` | CSV/Excel |
 
-右上角 **公开演练** / **授权快照** 数据隔离；状态变更写入本地审计（`理财经理·演示`）。
+## Grok Bot
 
-## 演示数据
-
-- 基础到期字段：`data/demo-clients.json`、`data/snapshot-clients.json`
-- 维护扩展字段：`data/demo-maintenance.json`、`data/snapshot-maintenance.json`（按客户 id 合并）
-- 业务基准日：`lib/dates.ts` → `REFERENCE_DATE`（2026-10-21）
-- 浏览器持久化：`localStorage` 键 `clientops-state-v3`（含高效录入新增客户）
-
-## 高效录入（Smart Intake）
-
-路由：`/intake`
-
-1. **粘贴模式**：杂乱中文（粤普混写）→ `POST /api/intake/parse`，优先 **通义千问文本**（`qwen-plus`，可 `QWEN_TEXT_MODEL` 覆盖）输出 17 字段 JSON。
-2. **图片模式**：前端长边压缩 ≤1600px 的 base64 → 同一接口，优先 **通义千问视觉**（默认 `qwen-vl-max`，可 `QWEN_VL_MODEL` 覆盖）直接读图结构化；**图片会发送至阿里云百炼**（页面有提示）。
-3. **回退**：未配置 `DASHSCOPE_API_KEY` 或调用失败 → **Tesseract.js** OCR + `lib/intake-parser.ts` 本地规则；界面显示当前识别方式。
-4. **核对**：每项 `value` / `confidence`（高·中·低）/ `source` 来源片段；看不清留空，不臆造。
-5. **确认登记**：`localStorage`，客户档案可见。
-
-### 环境变量（仅服务端）
-
-| 变量 | 说明 |
-|------|------|
-| `DASHSCOPE_API_KEY` | 阿里云百炼 API Key（**切勿** `NEXT_PUBLIC_` 暴露） |
-| `QWEN_VL_MODEL` | 默认 `qwen-vl-max` |
-| `QWEN_TEXT_MODEL` | 默认 `qwen-plus` |
-
-接口：[OpenAI 兼容](https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions)，实现见 `lib/qwen-intake.ts`。
-
-### 本地 OCR 限制
-
-- Tesseract 仅在回退路径使用；首次会下载语言包。
-- Vercel 部署时在 Project → Environment Variables 配置 `DASHSCOPE_API_KEY` 后 Redeploy。
-
-Grok Bot 可转发 `POST /api/intake/parse`（`text` / `imageBase64` + `mimeType`）。
-
-替换数据源：编辑 JSON，或实现 `GET /api/clients`；结构见 `lib/types.ts` 的 `ClientRecord`。
-
-## 集成占位（无密钥，可直接编译）
-
-### Notion 客户库（Kevin）
-
-- `GET/POST /api/integrations/notion` — 返回 stub 与接入注释
-- 目标：将 Notion Database 同步为 `ClientRecord` + maintenance 字段
-- 环境变量（未来）：`NOTION_TOKEN`、`NOTION_DATABASE_ID`（勿提交仓库）
-
-### Grok Bot Webhook
-
-- `GET/POST /api/integrations/grok-bot` — 接收 Bot 推送的任务载荷
-- 示例 POST body：
-  ```json
-  { "type": "expiry_alert", "clientId": "demo-003", "message": "逾期核对" }
-  ```
-  ```json
-  { "type": "brief_request", "format": "markdown" }
-  ```
-  ```json
-  { "type": "intake_parse", "text": "姓名：… 产品代码：…" }
-  ```
-- 可选鉴权：请求头 `Authorization: Bearer <GROK_BOT_WEBHOOK_SECRET>`
-- 演示环境不做真实写库，返回 `accepted` 与前端路由提示；Kevin 的 Grok Bot 可据此对接后再实现服务端处理器。
-
-## 在 Cursor Origin 中长期维护
-
-1. 在本仓库继续迭代 UI、数据模型与集成逻辑（Manus 链接不再作为交付物）。
-2. Grok Bot 通过 HTTPS 调用部署后的 `/api/integrations/grok-bot`（本地开发可用隧道转发）。
-3. Notion 同步建议在 CI 或定时任务中调用 `/api/integrations/notion` 的 POST 实现。
-4. 部署：见 [docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)；`npm run build` 为发布前检查。
-
-## 技术结构
-
-```
-app/(main)/          带侧栏的各业务模块页面
-app/api/             clients、audit、integrations/*
-components/          UI 与 ExpiryModule
-context/             ClientOpsProvider
-data/                演示 JSON
-lib/                 类型、优先级、话术、导航
+```http
+GET https://<your-app>.vercel.app/api/expiring?days=7
+Authorization: Bearer <BOT_API_TOKEN>
 ```
 
-## 许可证
+## 安全说明与限制
 
-内部演示用途；请勿将演示数据当作真实客户信息。
+- 数据库中仅为密文；明文仅在已登录会话的服务端内存中短暂出现。
+- 单用户密码模型：无多角色、无细粒度 ACL；请使用强 `APP_PASSWORD` 并启用 Vercel 访问控制（如需要）。
+- 登录失败 5 次 / 15 分钟 IP 限流（存 Neon）。
+- 高效录入图片会发往阿里云（若配置 `DASHSCOPE_API_KEY`）；未配置则本地 OCR。
+- 不提供银行级 HSM、字段级审计、设备绑定；合规投产前需行内安全评审。
+- 演示 JSON / `localStorage` 旧版已移除；勿将演示客户当作真实数据。
+
+部署细节：[docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)

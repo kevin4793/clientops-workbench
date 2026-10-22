@@ -138,11 +138,6 @@ export type ExpiryBucket = "today" | "week" | "overdue" | "month";
 export type NavModuleId =
   | "overview"
   | "profiles"
-  | "care"
-  | "holdings"
-  | "tasks"
-  | "timeline"
-  | "talks"
+  | "intake"
   | "expiry"
-  | "brief"
-  | "intake";
+  | "import-export";

@@ -14,76 +14,42 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/",
     label: "总览",
     short: "总览",
-    description: "今日维护全景与待办摘要",
-  },
-  {
-    id: "intake",
-    href: "/intake",
-    label: "高效录入",
-    short: "录入",
-    description: "粘贴/拍照识别，字段映射登记",
+    description: "客户与到期摘要",
   },
   {
     id: "profiles",
     href: "/profiles",
     label: "客户档案",
     short: "档案",
-    description: "家庭结构、风险偏好与最近接触",
+    description: "加密云端客户列表",
   },
   {
-    id: "care",
-    href: "/care",
-    label: "关怀清单",
-    short: "关怀",
-    description: "生日与节日关怀待办",
-  },
-  {
-    id: "holdings",
-    href: "/holdings",
-    label: "持仓总览",
-    short: "持仓",
-    description: "多产品持有与到期分布",
-  },
-  {
-    id: "tasks",
-    href: "/tasks",
-    label: "跟进任务",
-    short: "任务",
-    description: "待联系 / 已约访 / 已办结",
-  },
-  {
-    id: "timeline",
-    href: "/timeline",
-    label: "服务记录",
-    short: "记录",
-    description: "通话、面会、微信备注时间线",
-  },
-  {
-    id: "talks",
-    href: "/talks",
-    label: "合规话术",
-    short: "话术",
-    description: "关怀、到期、犹豫期、到账核对",
+    id: "intake",
+    href: "/intake",
+    label: "高效录入",
+    short: "录入",
+    description: "粘贴/拍照识别后登记",
   },
   {
     id: "expiry",
     href: "/expiry",
-    label: "到期运营",
+    label: "到期看板",
     short: "到期",
-    description: "到期看板、核对与续期作战室",
+    description: "按到期日筛选",
   },
   {
-    id: "brief",
-    href: "/brief",
-    label: "晨会简报",
-    short: "简报",
-    description: "导出今日外呼顺序与要点",
+    id: "import-export",
+    href: "/import-export",
+    label: "导入导出",
+    short: "导入",
+    description: "CSV / Excel（飞书表格）",
   },
 ];
 
 export function navItemForPath(pathname: string): NavItem | undefined {
-  if (pathname.startsWith("/war-room")) return NAV_ITEMS.find((n) => n.id === "expiry");
-  if (pathname.startsWith("/profiles/")) return NAV_ITEMS.find((n) => n.id === "profiles");
+  if (pathname.startsWith("/profiles/")) {
+    return NAV_ITEMS.find((n) => n.id === "profiles");
+  }
   const exact = NAV_ITEMS.find((n) => n.href === pathname);
   if (exact) return exact;
   return NAV_ITEMS.find((n) => n.href !== "/" && pathname.startsWith(n.href));

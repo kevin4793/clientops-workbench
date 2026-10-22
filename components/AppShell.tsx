@@ -1,30 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { NAV_ITEMS, navItemForPath } from "@/lib/nav";
-import { REFERENCE_DATE } from "@/lib/dates";
-import { DataModeToggle } from "./DataModeToggle";
-import { useClientOps } from "@/context/ClientOpsContext";
+import { useSecureClients } from "@/context/SecureClientsContext";
 
-export function AppShell({
-  children,
-  title,
-  subtitle,
-}: {
-  children: React.ReactNode;
-  title?: string;
-  subtitle?: string;
-}) {
+export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const active = navItemForPath(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { dataMode } = useClientOps();
+  const { error, envReady } = useSecureClients();
 
-  const dateStr = `${REFERENCE_DATE.getFullYear()}年${
-    REFERENCE_DATE.getMonth() + 1
-  }月${REFERENCE_DATE.getDate()}日`;
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/login");
+  }
 
   return (
     <div className="flex min-h-screen bg-[#0a1614] text-teal-50">
@@ -34,40 +26,31 @@ export function AppShell({
         }`}
       >
         <div className="flex h-full flex-col p-4">
-          <Link href="/" className="mb-1 block" onClick={() => setMobileOpen(false)}>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-teal-500">
-              Client Maintenance Ops
-            </p>
-            <p className="text-base font-semibold leading-tight text-teal-50">
-              客户维护工作台
-            </p>
-          </Link>
-          <p className="mb-4 text-[11px] text-teal-400/70">业务日 {dateStr}</p>
+          <p className="text-base font-semibold text-teal-50">客户维护工作台</p>
+          <p className="mb-4 text-[10px] text-teal-500">云端加密 · 单用户</p>
           <nav className="flex-1 space-y-0.5 overflow-y-auto">
-            {NAV_ITEMS.map((item) => {
-              const isActive = active?.id === item.id;
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={`block rounded-lg px-3 py-2.5 transition ${
-                    isActive
-                      ? "bg-teal-700/50 text-white"
-                      : "text-teal-200/85 hover:bg-teal-900/40 hover:text-teal-50"
-                  }`}
-                >
-                  <span className="text-sm font-medium">{item.label}</span>
-                  <span className="mt-0.5 block text-[10px] opacity-70">
-                    {item.description}
-                  </span>
-                </Link>
-              );
-            })}
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={`block rounded-lg px-3 py-2.5 text-sm ${
+                  active?.id === item.id
+                    ? "bg-teal-700/50 text-white"
+                    : "text-teal-200/85 hover:bg-teal-900/40"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
-          <div className="mt-4 border-t border-teal-900/50 pt-4">
-            <DataModeToggle />
-          </div>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="mt-4 rounded-lg border border-teal-700 px-3 py-2 text-xs text-teal-200"
+          >
+            退出登录
+          </button>
         </div>
       </aside>
 
@@ -90,24 +73,19 @@ export function AppShell({
             >
               菜单
             </button>
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-lg font-semibold">
-                {title ?? active?.label ?? "客户维护工作台"}
-              </h1>
-              {(subtitle ?? active?.description) && (
-                <p className="truncate text-xs text-teal-300/70">
-                  {subtitle ?? active?.description}
-                </p>
-              )}
-            </div>
+            <h1 className="text-lg font-semibold">{active?.label ?? "工作台"}</h1>
           </div>
-          {dataMode === "snapshot" && (
-            <div className="border-t border-amber-600/30 bg-amber-950/40 px-4 py-1.5 text-center text-[11px] text-amber-100">
-              授权测试快照 — 与公开演练库隔离，仍为虚构数据
+          {!envReady && (
+            <div className="border-t border-rose-600/40 bg-rose-950/50 px-4 py-2 text-center text-xs text-rose-100">
+              环境未就绪 — <Link href="/setup" className="underline">查看配置说明</Link>
+            </div>
+          )}
+          {error && envReady && (
+            <div className="border-t border-amber-600/30 bg-amber-950/40 px-4 py-1.5 text-center text-xs text-amber-100">
+              {error}
             </div>
           )}
         </header>
-
         <main className="flex-1 px-4 py-4 pb-10">{children}</main>
       </div>
     </div>

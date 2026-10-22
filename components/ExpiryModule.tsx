@@ -1,112 +1,78 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useClientOps } from "@/context/ClientOpsContext";
-import { inExpiryBucket } from "@/lib/dates";
-import { sortByPriority } from "@/lib/priority";
-import type { ExpiryBucket } from "@/lib/types";
-import { AuditTrail } from "./AuditTrail";
-import { ClientCard } from "./ClientCard";
-import { ExpiryTabs } from "./ExpiryTabs";
-import { FilterBar, type BoardFilters } from "./FilterBar";
-import { FollowUpPanel } from "./FollowUpPanel";
-import { TalkTrackDrawer } from "./TalkTrackDrawer";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useSecureClients } from "@/context/SecureClientsContext";
+
+type Bucket = "week" | "overdue" | "month";
 
 export function ExpiryModule() {
-  const { clients, getClient } = useClientOps();
-  const [bucket, setBucket] = useState<ExpiryBucket>("today");
-  const [filters, setFilters] = useState<BoardFilters>({
-    productType: "全部",
-    priorityOnly: false,
-    followOpenOnly: false,
-  });
-  const [talkClientId, setTalkClientId] = useState<string | null>(null);
+  const { clients, loading } = useSecureClients();
+  const [bucket, setBucket] = useState<Bucket>("week");
+  const [today, setToday] = useState<string | null>(null);
 
-  const counts = useMemo(() => {
-    const c: Record<ExpiryBucket, number> = {
-      today: 0,
-      week: 0,
-      overdue: 0,
-      month: 0,
-    };
-    for (const client of clients) {
-      (["today", "week", "overdue", "month"] as ExpiryBucket[]).forEach((b) => {
-        if (inExpiryBucket(client.expiryDate, b)) c[b]++;
-      });
-    }
-    return c;
-  }, [clients]);
+  useEffect(() => {
+    setToday(new Date().toISOString().slice(0, 10));
+  }, []);
 
   const filtered = useMemo(() => {
-    let list = clients.filter((c) => inExpiryBucket(c.expiryDate, bucket));
-    if (filters.productType !== "全部") {
-      list = list.filter((c) => c.productType === filters.productType);
-    }
-    if (filters.followOpenOnly) {
-      list = list.filter((c) => c.followUpStatus !== "已办结");
-    }
-    list = sortByPriority(list);
-    if (filters.priorityOnly) {
-      list = list.slice(0, 5);
-    }
-    return list;
-  }, [clients, bucket, filters]);
+    if (!today) return [];
+    const todayStr = today;
+    const in7 = new Date();
+    in7.setDate(in7.getDate() + 7);
+    const weekEnd = in7.toISOString().slice(0, 10);
+    const monthEnd = new Date();
+    monthEnd.setMonth(monthEnd.getMonth() + 1);
+    const monthEndStr = monthEnd.toISOString().slice(0, 10);
 
-  const talkClient = talkClientId ? getClient(talkClientId) ?? null : null;
+    return clients.filter((c) => {
+      if (!c.expiryDate) return false;
+      if (bucket === "overdue") return c.expiryDate < todayStr;
+      if (bucket === "week")
+        return c.expiryDate >= todayStr && c.expiryDate <= weekEnd;
+      return c.expiryDate >= todayStr && c.expiryDate <= monthEndStr;
+    });
+  }, [clients, bucket, today]);
+
+  if (loading) return <p className="text-teal-400">加载中…</p>;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
-      <p className="rounded-xl border border-teal-800/30 bg-teal-950/30 px-3 py-2 text-xs leading-relaxed text-teal-200/80">
-        到期运营模块：看板、到账核对与续期作战室。客户全生命周期维护请使用左侧其他模块。
-      </p>
-
-      <ExpiryTabs active={bucket} counts={counts} onChange={setBucket} />
-      <FilterBar filters={filters} onChange={setFilters} />
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-teal-100">
-              客户卡片（按优先级排序）
-            </h2>
-            {filtered[0] && (
-              <button
-                type="button"
-                onClick={() => setTalkClientId(filtered[0].id)}
-                className="text-xs text-teal-400 underline-offset-2 hover:underline"
-              >
-                打开 Top1 合规话术
-              </button>
-            )}
-          </div>
-          {filtered.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-teal-800 p-8 text-center text-sm text-teal-300/60">
-              当前筛选下暂无客户，请切换日期分段或筛选条件。
-            </p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {filtered.map((c, i) => (
-                <ClientCard
-                  key={c.id}
-                  client={c}
-                  rank={i + 1}
-                  showPriorityReason={i === 0}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="space-y-4">
-          <FollowUpPanel />
-          <AuditTrail />
-        </div>
+    <div className="mx-auto max-w-3xl space-y-4">
+      <div className="flex gap-2">
+        {(
+          [
+            ["week", "7 日内"],
+            ["overdue", "已逾期"],
+            ["month", "30 日内"],
+          ] as [Bucket, string][]
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setBucket(id)}
+            className={`rounded-lg px-3 py-1.5 text-sm ${
+              bucket === id ? "bg-teal-600 text-white" : "bg-teal-900/50"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
-
-      <TalkTrackDrawer
-        client={talkClient}
-        open={!!talkClientId}
-        onClose={() => setTalkClientId(null)}
-      />
+      <ul className="space-y-2">
+        {filtered.map((c) => (
+          <li
+            key={c.id}
+            className="rounded-xl border border-teal-800/40 bg-[#152a25]/60 px-4 py-3"
+          >
+            <Link href={`/profiles/${c.id}`} className="font-medium text-teal-50">
+              {c.displayName}
+            </Link>
+            <p className="text-xs text-teal-400">
+              {c.productName} · 到期 {c.expiryDate} · ¥{c.amount.toLocaleString("zh-CN")}
+            </p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

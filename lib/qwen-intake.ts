@@ -11,26 +11,16 @@ const FIELD_LIST: IntakeFieldKey[] = [
   "expiryDate",
   "contactNotes",
   "dob",
-  "gender",
-  "lastBranchVisit",
-  "familySituation",
-  "household",
-  "assetRange",
-  "hobbies",
-  "quotesSaid",
-  "personality",
-  "riskTolerance",
-  "otherBanksAssets",
-  "primaryBanks",
 ];
 
-const EXTRACTION_RULES = `你是银行理财「高效录入」助手。从图片或文字提取客户维护字段。
+const EXTRACTION_RULES = `你是银行理财「高效录入」助手。仅提取 6 个字段。
 要求：
-1. 仅填写原文/图中能看清的内容；看不清或没有的字段 value 必须为 ""，禁止猜测或编造。
-2. 支持中文普通话、粤语书写混用（如屋企、几时来过网点）。
-3. 手写体尽量识别，不确定则留空并降低 confidence。
-4. 每个字段输出 value、confidence（只能是 高、中、低 之一）、source（原文短片段，≤80字，无则 ""）。
-5. 只输出一个 JSON 对象，不要 markdown，格式：
+1. 看不清则 value 为 ""，禁止编造。
+2. 禁止输出手机号、身份证号、银行账号。
+3. dob 仅 MM-DD，不含年份。
+4. 支持粤语、普通话、手写。
+5. 每字段含 value、confidence（高/中/低）、source。
+6. 只输出 JSON：
 {"fields":{${FIELD_LIST.map((k) => `"${k}":{"value":"","confidence":"低","source":""}`).join(",")}}}`;
 
 export type QwenParseOk = {

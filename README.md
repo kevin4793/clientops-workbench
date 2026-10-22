@@ -20,7 +20,21 @@ npm start
 旧地址 `https://clientops-hybuephs.manus.space` **没有**本仓库新功能。要公网打开 **高效录入** 等模块，请部署本项目：
 
 - **详细步骤**：[docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)
-- **最短路径**：代码推到 GitHub → [vercel.com/new](https://vercel.com/new) 导入仓库 → Deploy → 访问 `https://<项目名>.vercel.app/intake`
+- **GitHub 账号**：[kevin4793](https://github.com/kevin4793) — 请先创建仓库 **`clientops-workbench`**（见下方），再部署。
+
+**一键部署（仓库创建并 push 后可用）：**
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fkevin4793%2Fclientops-workbench&project-name=clientops-workbench&repository-name=clientops-workbench)
+
+**首次推送到 GitHub（在本地 / Cursor 终端，已有本仓库代码时）：**
+
+```bash
+# 1. 在 https://github.com/new 创建空仓库 kevin4793/clientops-workbench（不要加 README）
+git remote add github https://github.com/kevin4793/clientops-workbench.git
+git push -u github main
+# 2. 打开上一「Deploy with Vercel」按钮，或 https://vercel.com/new 导入该仓库
+# 3. 部署完成后访问 https://<你的项目>.vercel.app/intake
+```
 
 可选环境变量见 [.env.example](.env.example)。仓库根目录含 `vercel.json`（默认 `npm run build`，区域含香港/新加坡节点以利于国内访问 OCR CDN）。
 

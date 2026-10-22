@@ -36,7 +36,7 @@ git push -u github main
 # 3. 部署完成后访问 https://<你的项目>.vercel.app/intake
 ```
 
-可选环境变量见 [.env.example](.env.example)。仓库根目录含 `vercel.json`（默认 `npm run build`，区域含香港/新加坡节点以利于国内访问 OCR CDN）。
+可选环境变量见 [.env.example](.env.example)。仓库根目录含 `vercel.json`（默认 `npm run build`，区域 `hkg1`）。
 
 ## 模块导航
 
@@ -67,24 +67,28 @@ git push -u github main
 
 路由：`/intake`
 
-1. **粘贴模式**：将微信备注、会议纪要等杂乱中文（可含粤普混排标签如「屋企」「几时来过网点」）贴入文本框，点「解析字段」。
-2. **图片模式**：拖拽或选择图片 → 浏览器 **Tesseract.js**（`chi_sim+eng`）本地 OCR → 文本可编辑 → 再解析。
-3. **解析**：`lib/intake-parser.ts` 启发式拆字段（姓名、产品代码、金额、日期 + Kevin 12 项档案字段）；也可 `POST /api/intake/parse` 统一入口。
-4. **核对**：每项带置信度（高/中/低）与**来源片段**；可手工改，系统不臆造原文没有的信息。
-5. **确认登记**：写入当前数据模式客户列表（`localStorage`），在 **客户档案** 可见，标签「高效录入」。
+1. **粘贴模式**：杂乱中文（粤普混写）→ `POST /api/intake/parse`，优先 **通义千问文本**（`qwen-plus`，可 `QWEN_TEXT_MODEL` 覆盖）输出 17 字段 JSON。
+2. **图片模式**：前端长边压缩 ≤1600px 的 base64 → 同一接口，优先 **通义千问视觉**（默认 `qwen-vl-max`，可 `QWEN_VL_MODEL` 覆盖）直接读图结构化；**图片会发送至阿里云百炼**（页面有提示）。
+3. **回退**：未配置 `DASHSCOPE_API_KEY` 或调用失败 → **Tesseract.js** OCR + `lib/intake-parser.ts` 本地规则；界面显示当前识别方式。
+4. **核对**：每项 `value` / `confidence`（高·中·低）/ `source` 来源片段；看不清留空，不臆造。
+5. **确认登记**：`localStorage`，客户档案可见。
 
-### OCR 限制
+### 环境变量（仅服务端）
 
-- 首次 OCR 会下载语言包，需网络；模糊/手写图可能识别率低，请改粘贴或人工改 OCR 文本。
-- 服务端视觉未启用；`POST /api/intake/parse` 收到 `imageBase64` 时返回 stub 说明。
+| 变量 | 说明 |
+|------|------|
+| `DASHSCOPE_API_KEY` | 阿里云百炼 API Key（**切勿** `NEXT_PUBLIC_` 暴露） |
+| `QWEN_VL_MODEL` | 默认 `qwen-vl-max` |
+| `QWEN_TEXT_MODEL` | 默认 `qwen-plus` |
 
-### 换成真实 LLM / Vision
+接口：[OpenAI 兼容](https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions)，实现见 `lib/qwen-intake.ts`。
 
-在 `app/api/intake/parse/route.ts` 中：
+### 本地 OCR 限制
 
-- 对 `imageBase64` 调用视觉模型提取 `text`；
-- 对 `text` 可改用 LLM 结构化输出，再映射为 `IntakeFieldKey`；
-- Grok Bot 可 `POST /api/integrations/grok-bot` type=`intake_parse`，或直接转发 `POST /api/intake/parse`（`text` / `imageText`）。
+- Tesseract 仅在回退路径使用；首次会下载语言包。
+- Vercel 部署时在 Project → Environment Variables 配置 `DASHSCOPE_API_KEY` 后 Redeploy。
+
+Grok Bot 可转发 `POST /api/intake/parse`（`text` / `imageBase64` + `mimeType`）。
 
 替换数据源：编辑 JSON，或实现 `GET /api/clients`；结构见 `lib/types.ts` 的 `ClientRecord`。
 
